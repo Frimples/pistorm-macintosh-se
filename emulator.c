@@ -995,12 +995,12 @@ static inline int32_t platform_write_check(uint8_t type, uint32_t addr, uint32_t
               ovl = 1;
               m68ki_cpu.ovl = 1;
               printf("[MAC] OVL on.\n");
-              handle_ovl_mappings_mac68k(cfg);
+
           } else if (ovl) {
             ovl = 0;
             m68ki_cpu.ovl = 0;
             printf("[MAC] OVL off.\n");
-            handle_ovl_mappings_mac68k(cfg);
+
           }
           break;
       }
