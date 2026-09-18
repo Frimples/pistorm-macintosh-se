@@ -2,6 +2,54 @@
 
 ![logo](media/pistorm_banner.jpg)
 
+## Macintosh SE test platform
+
+This repository is the Macintosh SE-focused PiStorm test tree. It is based on
+the upstream PiStorm code and keeps the Macintosh SE work isolated from the
+upstream Amiga platform code.
+
+The `macse` platform is intentionally a separate platform identifier. Its
+base platform callbacks are neutral; ROM, RAM, and device mappings remain
+configuration-driven rather than being hard-coded into the platform.
+
+### Current Macintosh SE work
+
+- Removed the obsolete legacy Macintosh platform and its references.
+- Added the neutral `macse` platform placeholder.
+- Added a `macse`-only virtual NCR 5380-style SCSI implementation.
+- Added optional `scsi_image` configuration for a raw 512-byte-sector image.
+- Delayed SCSI window activation until the Macintosh accesses the IWM/floppy
+  address window during startup.
+- Added `BUGS.md` as the local test-repository bug tracker.
+
+The SCSI implementation and reset behavior remain experimental. Initial boot
+and restart behavior must be validated on a real Macintosh SE with PiStorm;
+successful compilation is not hardware validation. The physical SE reset
+path is currently a known open bug.
+
+### Macintosh SE configuration example
+
+```ini
+platform macse
+scsi_image /absolute/path/to/disk-image.dsk
+```
+
+Do not commit ROM dumps, disk images, credentials, or compiled binaries to
+the source repository. Release binaries are distributed as GitHub release
+assets instead.
+
+### Building on Raspberry Pi OS
+
+For the tested Raspberry Pi native build:
+
+```sh
+make clean
+make PLATFORM=PI3_BULLSEYE -j1
+```
+
+`-j1` is recommended because Musashi-generated files can otherwise race
+during parallel builds.
+
 # Join us on Discord or on Libera Chat IRC #PiStorm
 
 * There's a Discord server dedicated to PiStorm discussion and development, which you can join through this handy invite link: https://discord.com/invite/j6rPtzxaNW
