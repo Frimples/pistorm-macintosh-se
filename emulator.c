@@ -747,10 +747,8 @@ void cpu_pulse_reset(void) {
 	m68ki_cpu_core *state = &m68ki_cpu;
   ps_pulse_reset();
 #ifdef ENABLE_MACSE_VIRTUAL_SCSI
-  if (cfg && cfg->platform->id == PLATFORM_MACSE && cfg->scsi_image) {
+  if (cfg && cfg->platform->id == PLATFORM_MACSE && cfg->scsi_image)
     macse_scsi_save();
-    macse_scsi_reset();
-  }
 #endif
 
   ovl = 1;
