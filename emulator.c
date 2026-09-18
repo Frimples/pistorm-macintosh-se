@@ -19,6 +19,9 @@
 #include "platforms/amiga/ahi/pi-ahi-enums.h"
 #include "platforms/amiga/pistorm-dev/pistorm-dev.h"
 #include "platforms/amiga/pistorm-dev/pistorm-dev-enums.h"
+#ifdef ENABLE_MACSE_VIRTUAL_SCSI
+#include "platforms/macse/macse_scsi.h"
+#endif
 #include "gpio/ps_protocol.h"
 
 #include <assert.h>
@@ -374,6 +377,10 @@ void *keyboard_task() {
 
 key_loop:
   kpollrc = poll(kbdpoll, 1, KEY_POLL_INTERVAL_MSEC);
+#ifdef ENABLE_MACSE_VIRTUAL_SCSI
+  if (cfg->platform->id == PLATFORM_MACSE && cfg->scsi_image)
+    macse_scsi_save();
+#endif
   if ((kpollrc > 0) && (kbdpoll[0].revents & POLLHUP)) {
     // in the event that a keyboard is unplugged, keyboard_task will whiz up to 100% utilisation
     // this is undesired, so if the keyboard HUPs, end the thread without ending the emulation
@@ -610,6 +617,14 @@ switch_config:
 
     if (!cfg->platform)
       cfg->platform = make_platform_config("none", "generic");
+#ifdef ENABLE_MACSE_VIRTUAL_SCSI
+    if (cfg->platform->id == PLATFORM_MACSE && cfg->scsi_image &&
+        macse_scsi_init(cfg->scsi_image, 0) != 0) {
+      fprintf(stderr, "[SCSI-ADDON] Image rejected; add-on disabled.\n");
+      free(cfg->scsi_image);
+      cfg->scsi_image = NULL;
+    }
+#endif
     cfg->platform->platform_initial_setup(cfg);
   }
 
@@ -724,6 +739,10 @@ switch_config:
 void cpu_pulse_reset(void) {
 	m68ki_cpu_core *state = &m68ki_cpu;
   ps_pulse_reset();
+#ifdef ENABLE_MACSE_VIRTUAL_SCSI
+  if (cfg && cfg->platform->id == PLATFORM_MACSE && cfg->scsi_image)
+    macse_scsi_save();
+#endif
 
   ovl = 1;
   m68ki_cpu.ovl = 1;
@@ -782,6 +801,12 @@ static inline void ps_write(uint8_t type, uint32_t addr, uint32_t val) {
 }
 
 static inline int32_t platform_read_check(uint8_t type, uint32_t addr, uint32_t *res) {
+#ifdef ENABLE_MACSE_VIRTUAL_SCSI
+  if (cfg->platform->id == PLATFORM_MACSE && cfg->scsi_image && macse_scsi_owns(addr)) {
+    *res = macse_scsi_read(addr, type);
+    return 1;
+  }
+#endif
   switch (cfg->platform->id) {
     case PLATFORM_AMIGA:
       switch (addr) {
@@ -987,6 +1012,10 @@ unsigned int m68k_read_memory_32(unsigned int address) {
 }
 
 static inline int32_t platform_write_check(uint8_t type, uint32_t addr, uint32_t val) {
+#ifdef ENABLE_MACSE_VIRTUAL_SCSI
+  if (cfg->platform->id == PLATFORM_MACSE && cfg->scsi_image && macse_scsi_owns(addr))
+    return macse_scsi_write(addr, val, type);
+#endif
   switch (cfg->platform->id) {
     case PLATFORM_MAC:
       switch (addr) {

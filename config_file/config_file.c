@@ -41,6 +41,7 @@ const char *config_item_names[CONFITEM_NUM] = {
   "platform",
   "setvar",
   "kbfile",
+  "scsi_image",
 };
 
 const char *mapcmd_names[MAPCMD_NUM] = {
@@ -338,6 +339,10 @@ void free_config_file(struct emulator_config *cfg) {
     free(cfg->keyboard_file);
     cfg->keyboard_file = NULL;
   }
+  if (cfg->scsi_image) {
+    free(cfg->scsi_image);
+    cfg->scsi_image = NULL;
+  }
 
   m68k_clear_ranges();
 
@@ -479,6 +484,12 @@ struct emulator_config *load_config_file(char *filename) {
         cfg->keyboard_file = (char *)calloc(1, strlen(cur_cmd) + 1);
         strcpy(cfg->keyboard_file, cur_cmd);
         printf("[CFG] Set keyboard event source file to %s.\n", cfg->keyboard_file);
+        break;
+      case CONFITEM_SCSIIMAGE:
+        get_next_string(parse_line, cur_cmd, &str_pos, ' ');
+        cfg->scsi_image = (char *)calloc(1, strlen(cur_cmd) + 1);
+        strcpy(cfg->scsi_image, cur_cmd);
+        printf("[CFG] Optional virtual SCSI image: %s.\n", cfg->scsi_image);
         break;
       case CONFITEM_PLATFORM: {
         char platform_name[128], platform_sub[128];
