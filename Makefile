@@ -11,6 +11,7 @@ MAINFILES        = emulator.c \
 	platforms/amiga/amiga-platform.c \
 	platforms/amiga/amiga-registers.c \
 	platforms/amiga/amiga-interrupts.c \
+	platforms/macse/macse-platform.c \
 	platforms/dummy/dummy-platform.c \
 	platforms/dummy/dummy-registers.c \
 	platforms/amiga/Gayle.c \

@@ -6,10 +6,10 @@
 #include <string.h>
 
 static char*platform_names[PLATFORM_NUM] = {
-    "none",
-    "amiga",
-
-    "x68000",
+    [PLATFORM_NONE] = "none",
+    [PLATFORM_AMIGA] = "amiga",
+    [PLATFORM_MACSE] = "macse",
+    [PLATFORM_X68000] = "x68000",
 };
 
 int get_platform_index(char *name) {
@@ -17,7 +17,7 @@ int get_platform_index(char *name) {
         return -1;
 
     for (int i = 0; i < PLATFORM_NUM; i++) {
-        if (strcmp(name, platform_names[i]) == 0)
+        if (platform_names[i] && strcmp(name, platform_names[i]) == 0)
             return i;
     }
     return -1;
@@ -26,6 +26,7 @@ int get_platform_index(char *name) {
 void create_platform_amiga(struct platform_config *cfg, char *subsys);
 
 void create_platform_dummy(struct platform_config *cfg, char *subsys);
+void create_platform_macse(struct platform_config *cfg, char *subsys);
 
 struct platform_config *make_platform_config(char *name, char *subsys) {
     struct platform_config *cfg = NULL;
@@ -50,6 +51,10 @@ struct platform_config *make_platform_config(char *name, char *subsys) {
     switch(platform_id) {
         case PLATFORM_AMIGA:
             create_platform_amiga(cfg, subsys);
+            break;
+
+        case PLATFORM_MACSE:
+            create_platform_macse(cfg, subsys);
             break;
 
         case PLATFORM_NONE:
