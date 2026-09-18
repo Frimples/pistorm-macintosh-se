@@ -110,7 +110,7 @@ static uint8_t busstat(void) {
     uint8_t v = 0;
     if ((regs[0][R_TCMD] & TC_PHASE) == ((curstat() >> 2) & 7)) v |= BAS_PHASE;
     if ((v & BAS_PHASE) && (curstat() & ST_REQ) &&
-        (regs[0][R_MODE] & MODE_DMA) &&
+        (dma_dir == 1 || (regs[0][R_MODE] & MODE_DMA)) &&
         ((dma_dir == 1 && (curstat() & ST_IO)) ||
          (dma_dir == 2 && !(curstat() & ST_IO)))) v |= BAS_DRQ;
     if (regs[0][R_ICMD] & IC_ACK) v |= BAS_ACK;
@@ -448,7 +448,10 @@ int macse_scsi_write(uint32_t addr, uint32_t val, uint8_t type) {
         if (regs[0][R_MODE] & MODE_DMA) { dma_dir = 2; dma_tail = 0; }
         break;
     case R_INDATA: case R_RESET:
-        if (regs[0][R_MODE] & MODE_DMA) { dma_dir = 1; dma_tail = 0; }
+        /* The SE enters the MAME READ_WAIT_DRQ-equivalent state by
+         * touching register 6/7.  The MODE_DMA bit is not necessarily set
+         * yet; waiting for it here misses the SE's blind pseudo-DMA setup. */
+        dma_dir = 1; dma_tail = 0;
         break;
     default: break;
     }
