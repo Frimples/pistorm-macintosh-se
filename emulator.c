@@ -129,7 +129,7 @@ char keyboard_file[256] = "/dev/input/event1";
 uint64_t trig_irq = 0, serv_irq = 0;
 uint16_t irq_delay = 0;
 unsigned int amiga_reset=0, amiga_reset_last=0;
-unsigned int do_reset=0;
+volatile unsigned int do_reset=0;
 
 void *ipl_task(void *args) {
   printf("IPL thread running\n");
