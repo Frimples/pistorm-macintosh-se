@@ -42,6 +42,12 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#ifdef ENABLE_MACSE_VIRTUAL_SCSI
+static int macse_scsi_active;
+#define MACSE_IWM_BASE 0xD00000u
+#define MACSE_IWM_HIGH 0xE00000u
+#endif
+
 #include "m68kops.h"
 
 #define KEY_POLL_INTERVAL_MSEC 5000
@@ -624,6 +630,7 @@ switch_config:
       free(cfg->scsi_image);
       cfg->scsi_image = NULL;
     }
+    macse_scsi_active = 0;
 #endif
     cfg->platform->platform_initial_setup(cfg);
   }
@@ -802,7 +809,13 @@ static inline void ps_write(uint8_t type, uint32_t addr, uint32_t val) {
 
 static inline int32_t platform_read_check(uint8_t type, uint32_t addr, uint32_t *res) {
 #ifdef ENABLE_MACSE_VIRTUAL_SCSI
-  if (cfg->platform->id == PLATFORM_MACSE && cfg->scsi_image && macse_scsi_owns(addr)) {
+  if (cfg->platform->id == PLATFORM_MACSE && cfg->scsi_image &&
+      !macse_scsi_active && addr >= MACSE_IWM_BASE && addr < MACSE_IWM_HIGH) {
+    macse_scsi_active = 1;
+    printf("[SCSI-ADDON] Enabled after Macintosh SE floppy-window access.\n");
+  }
+  if (cfg->platform->id == PLATFORM_MACSE && cfg->scsi_image &&
+      macse_scsi_active && macse_scsi_owns(addr)) {
     *res = macse_scsi_read(addr, type);
     return 1;
   }
@@ -1013,7 +1026,13 @@ unsigned int m68k_read_memory_32(unsigned int address) {
 
 static inline int32_t platform_write_check(uint8_t type, uint32_t addr, uint32_t val) {
 #ifdef ENABLE_MACSE_VIRTUAL_SCSI
-  if (cfg->platform->id == PLATFORM_MACSE && cfg->scsi_image && macse_scsi_owns(addr))
+  if (cfg->platform->id == PLATFORM_MACSE && cfg->scsi_image &&
+      !macse_scsi_active && addr >= MACSE_IWM_BASE && addr < MACSE_IWM_HIGH) {
+    macse_scsi_active = 1;
+    printf("[SCSI-ADDON] Enabled after Macintosh SE floppy-window access.\n");
+  }
+  if (cfg->platform->id == PLATFORM_MACSE && cfg->scsi_image &&
+      macse_scsi_active && macse_scsi_owns(addr))
     return macse_scsi_write(addr, val, type);
 #endif
   switch (cfg->platform->id) {
